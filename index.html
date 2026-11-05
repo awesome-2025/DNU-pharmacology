@@ -22,7 +22,7 @@
   --call-bg:#0C1A27; --call-fg:#F1F5F8; --call-dim:#9CB0C3; --accept:#1D9A67; --decline:#D03E2C;
   --f-display:"Gothic A1","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --accent-ink:#15314B;
+  --accent-ink:#15314B; --sos:#C3311F;
   --r:16px;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
@@ -30,7 +30,7 @@
   --brand:#2E5C88; --brand-ink:#FFFFFF; --brand-ring:#1F3A55; --brand-soft:#1B2F44;
   --ok:#5CC7AE; --ok-fill:#23856F; --ok-soft:#153730;
   --due:#E5B65A; --due-soft:#382D15;
-  --late:#F28A6B; --late-soft:#3D2018; --accent-ink:#5CC7AE;
+  --late:#F28A6B; --late-soft:#3D2018; --accent-ink:#5CC7AE; --sos:#D8432F;
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
@@ -38,7 +38,7 @@
   --brand:#2E5C88; --brand-ink:#FFFFFF; --brand-ring:#1F3A55; --brand-soft:#1B2F44;
   --ok:#5CC7AE; --ok-fill:#23856F; --ok-soft:#153730;
   --due:#E5B65A; --due-soft:#382D15;
-  --late:#F28A6B; --late-soft:#3D2018; --accent-ink:#5CC7AE;
+  --late:#F28A6B; --late-soft:#3D2018; --accent-ink:#5CC7AE; --sos:#D8432F;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -54,6 +54,28 @@ a{color:inherit}
 /* 머리 */
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.9rem}
 .top b{color:var(--ink);font-weight:700}
+
+/* 119 */
+.sos{appearance:none;border:0;cursor:pointer;width:100%;display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:14px;background:var(--sos);color:#FFFFFF;text-align:left;min-height:62px;font:inherit;box-shadow:0 8px 18px -10px rgba(150,30,20,.7);-webkit-tap-highlight-color:transparent}
+.sos:active{transform:scale(.98)}
+.sos-ic{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex:none}
+.sos-ic svg{width:22px;height:22px;fill:#FFFFFF}
+.sos-tx{display:flex;flex-direction:column;line-height:1.3;min-width:0}
+.sos-tx b{font-family:var(--f-display);font-size:1.3rem;font-weight:900}
+.sos-tx small{font-size:.8rem;opacity:.92}
+.sos-go{margin-left:auto;flex:none;font-weight:800;font-size:.95rem;background:#FFFFFF;color:#B42B1A;border-radius:999px;padding:6px 14px}
+.call.sos-call{background:#2A0B0B;overflow-y:auto;align-items:flex-start}
+.sos-call .call-inner{min-height:0;justify-content:flex-start;gap:18px}
+.sos-call .call-top{padding-top:1vh}
+.call-avatar.sos-av{background:#C3311F}
+.sos-av b{font-family:var(--f-display);font-size:2rem;font-weight:900;color:#FFFFFF}
+.call.ringing .call-avatar.sos-av::before,.call.ringing .call-avatar.sos-av::after{border-color:#E8735F}
+.demo-tag{font-size:.78rem;background:rgba(255,255,255,.12);color:#F8D9D2;border-radius:999px;padding:4px 12px}
+.say{background:rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;text-align:left;width:100%;display:flex;flex-direction:column;gap:8px;color:var(--call-fg)}
+.say-h{font-weight:800;font-size:1rem;color:#FFFFFF}
+.say ol{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:4px;font-size:.97rem;line-height:1.5}
+.say dl{margin:4px 0 0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:.88rem;border-top:1px solid rgba(255,255,255,.18);padding-top:10px}
+.say dt{color:var(--call-dim)} .say dd{margin:0}
 
 /* 큰 버튼 */
 .hero{display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:6px 4px;text-align:center}
@@ -195,6 +217,10 @@ footer{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.6}
 <body>
 
 <div class="wrap">
+  <button type="button" class="sos" id="sos" aria-label="119 긴급 전화 (발표용 시연)">
+    <span class="sos-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></span>
+    <span class="sos-tx"><b>119 긴급 전화</b><small>가슴 통증 · 말 어눌함 · 한쪽 마비</small></span>
+  </button>
   <div class="top">
     <span>동남보건대학교병원 · 신경과 · 심장내과</span>
     <span><b>김동남</b> 님</span>
@@ -303,6 +329,35 @@ footer{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.6}
     <div class="call-actions" id="callActions">
       <div class="call-btn-wrap"><button type="button" class="call-btn decline" id="callDecline" aria-label="거절"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button>거절</div>
       <div class="call-btn-wrap"><button type="button" class="call-btn accept" id="callAccept" aria-label="받기"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button>받기</div>
+    </div>
+  </div>
+</div>
+
+<div class="call sos-call" id="sosCall" hidden role="dialog" aria-modal="true" aria-labelledby="sosWho">
+  <div class="call-inner">
+    <div class="call-top">
+      <p class="demo-tag">발표용 시연 · 실제로 119에 연결되지 않습니다</p>
+      <div class="call-avatar sos-av" aria-hidden="true"><b>119</b></div>
+      <h2 id="sosWho">119 종합상황실</h2>
+      <p class="call-status num" id="sosStatus" aria-live="polite">연결 중…</p>
+    </div>
+    <div class="say" id="sosSay" hidden>
+      <p class="say-h">이렇게 말씀하세요</p>
+      <ol>
+        <li>집 주소를 먼저 말하세요.</li>
+        <li>증상과 <b>시작된 시각</b>을 말하세요. (예: "8시쯤부터 오른팔에 힘이 없어요")</li>
+        <li>"피를 묽게 하는 약(아스피린·플라빅스)을 먹고 있어요."</li>
+      </ol>
+      <p class="say-h">구급대원에게 이 화면을 보여 주세요</p>
+      <dl>
+        <dt>환자</dt><dd>김동남 · 56세 남자</dd>
+        <dt>병력</dt><dd>목 혈관 스텐트(7/16) · 심장 혈관 3곳 좁아짐 · 당뇨</dd>
+        <dt>먹는 약</dt><dd>아스피린 · 플라빅스 외 6가지</dd>
+        <dt>다니는 병원</dt><dd>동남보건대학교병원 신경과 · 심장내과</dd>
+      </dl>
+    </div>
+    <div class="call-actions">
+      <div class="call-btn-wrap"><button type="button" class="call-btn decline" id="sosEnd" aria-label="끊기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button>끊기</div>
     </div>
   </div>
 </div>
@@ -584,7 +639,7 @@ $("callAccept").addEventListener("click", () => {
   if (!voiced) { $("callNote").textContent = "이 기기에서는 한국어 음성이 없어 자막으로 보여 드려요"; $("callNote").hidden = false; }
 });
 $("callDecline").addEventListener("click", () => endCall("전화를 거절하셨어요", "declined"));
-document.addEventListener("keydown", e => { if (e.key === "Escape" && callOpen && !$("callActions").hidden) endCall("전화를 거절하셨어요", "declined"); });
+document.addEventListener("keydown", e => { if (e.key !== "Escape") return; if (!$("sosCall").hidden) { closeSos(); return; } if (callOpen && !$("callActions").hidden) endCall("전화를 거절하셨어요", "declined"); });
 $("demoCall").addEventListener("click", () => { ensureAudio(); openCall({ auto: false }); });
 try { window.speechSynthesis && window.speechSynthesis.getVoices(); } catch (e) {}
 
@@ -601,6 +656,40 @@ function checkOverdue(now){
     break;
   }
 }
+
+/* ── 119 긴급 전화 (발표용 시연: 실제 발신 없음) */
+let sosTimer = null, sosRing = null, sosTalk = null;
+function sosTone(){
+  if (!actx || actx.state !== "running") return;
+  const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 425;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t + 0.04); g.gain.setValueAtTime(0.06, t + 1.0); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.05);
+  o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 1.1);
+}
+function openSos(){
+  if (callOpen) return;
+  callOpen = true; ensureAudio();
+  const el = $("sosCall");
+  $("sosStatus").textContent = "연결 중…"; $("sosSay").hidden = true;
+  el.classList.add("ringing"); el.hidden = false; el.scrollTop = 0;
+  sosTone(); sosRing = setInterval(sosTone, 2000);
+  $("sosEnd").focus();
+  sosTimer = setTimeout(() => {
+    clearInterval(sosRing); el.classList.remove("ringing");
+    const start = Date.now();
+    const tick = () => { const s = Math.floor((Date.now() - start) / 1000); $("sosStatus").textContent = "통화 중 " + Math.floor(s / 60) + ":" + pad(s % 60); };
+    tick(); sosTalk = setInterval(tick, 1000);
+    $("sosSay").hidden = false;
+    speak("119 종합상황실입니다. 주소와 환자 상태를 말씀해 주세요.", () => {});
+  }, 4000);
+}
+function closeSos(){
+  clearTimeout(sosTimer); clearInterval(sosRing); clearInterval(sosTalk);
+  try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+  $("sosCall").classList.remove("ringing"); $("sosStatus").textContent = "통화가 끝났어요";
+  setTimeout(() => { $("sosCall").hidden = true; callOpen = false; $("sos").focus(); }, 900);
+}
+$("sos").addEventListener("click", openSos);
+$("sosEnd").addEventListener("click", closeSos);
 
 /* ── 약 찾기 */
 const chips = $("chips");
