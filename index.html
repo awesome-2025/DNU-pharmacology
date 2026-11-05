@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>김동남 님 복약 도우미</title>
+<meta name="description" content="약을 드신 뒤 큰 버튼을 누르면 시각이 초 단위로 기록됩니다. 맥박·혈압 재는 법, 약학정보원 약 검색.">
+<meta property="og:title" content="김동남 님 복약 도우미">
+<meta property="og:description" content="약 드신 뒤 눌러 주세요 · 간호학과 PBL 시제품">
+<meta name="theme-color" content="#15314B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 휴대폰 한 손 세로 기둥 — 시계 → 큰 버튼 → 오늘 두 칸 → 7일 → 안내 전화 → 재는 법 → 약 찾기 → 연락처 */
+:root{
+  --bg:#EDF1F4; --surface:#FFFFFF; --sunk:#E2E8EE; --ink:#13263A; --muted:#55687A; --line:#D2DBE3;
+  --brand:#15314B; --brand-ink:#FFFFFF; --brand-ring:#C9D6E3; --brand-soft:#E1E9F1;
+  --ok:#1C7363; --ok-fill:#1F7A6B; --ok-soft:#DCEEE9;
+  --due:#996208; --due-soft:#FAEED3;
+  --late:#B8401F; --late-soft:#FAE2DA;
+  --call-bg:#0C1A27; --call-fg:#F1F5F8; --call-dim:#9CB0C3; --accept:#1D9A67; --decline:#D03E2C;
+  --f-display:"Gothic A1","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --accent-ink:#15314B;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0B151E; --surface:#13212D; --sunk:#1A2A39; --ink:#E5ECF2; --muted:#9BAEBF; --line:#26394A;
+  --brand:#2E5C88; --brand-ink:#FFFFFF; --brand-ring:#1F3A55; --brand-soft:#1B2F44;
+  --ok:#5CC7AE; --ok-fill:#23856F; --ok-soft:#153730;
+  --due:#E5B65A; --due-soft:#382D15;
+  --late:#F28A6B; --late-soft:#3D2018; --accent-ink:#5CC7AE;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0B151E; --surface:#13212D; --sunk:#1A2A39; --ink:#E5ECF2; --muted:#9BAEBF; --line:#26394A;
+  --brand:#2E5C88; --brand-ink:#FFFFFF; --brand-ring:#1F3A55; --brand-soft:#1B2F44;
+  --ok:#5CC7AE; --ok-fill:#23856F; --ok-soft:#153730;
+  --due:#E5B65A; --due-soft:#382D15;
+  --late:#F28A6B; --late-soft:#3D2018; --accent-ink:#5CC7AE;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:34rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 44px;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h2{font-size:1.25rem;font-weight:800}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--due);outline-offset:3px}
+.num{font-variant-numeric:tabular-nums}
+
+/* 머리 */
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.9rem}
+.top b{color:var(--ink);font-weight:700}
+
+/* 큰 버튼 */
+.hero{display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:6px 4px;text-align:center}
+.clock{font-family:var(--f-display);font-weight:800;font-size:1.05rem;color:var(--muted)}
+.clock .num{color:var(--ink);font-size:1.6rem;display:block;letter-spacing:.01em}
+.take{appearance:none;border:0;cursor:pointer;width:min(78vw,300px);aspect-ratio:1;max-width:100%;border-radius:50%;
+  background:var(--brand);color:var(--brand-ink);box-shadow:0 0 0 14px var(--brand-ring),0 14px 30px -12px rgba(10,30,50,.45);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:28px;margin-block:14px;
+  transition:transform .12s ease, background-color .25s ease, box-shadow .25s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.take:active{transform:scale(.96)}
+.take-slot{font-size:1rem;font-weight:700;opacity:.85;border:1.5px solid currentColor;border-radius:999px;padding:2px 14px}
+.take-main{font-family:var(--f-display);font-weight:900;font-size:clamp(2.1rem,10vw,2.75rem);line-height:1.1}
+.take-sub{font-size:.95rem;opacity:.9;max-width:13em}
+.take.done{background:var(--ok-fill);box-shadow:0 0 0 14px var(--ok-soft),0 14px 30px -12px rgba(10,50,40,.45)}
+.store-note{font-size:.85rem;color:var(--muted)}
+
+/* 확인 패널 */
+.panel{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;text-align:left}
+.panel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.panel.warn{border-color:var(--late);background:var(--late-soft)}
+.panel strong{font-family:var(--f-display);font-size:1.15rem}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{appearance:none;font:inherit;font-weight:700;font-size:1rem;border-radius:12px;padding:12px 16px;cursor:pointer;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.grow{flex:1 1 9rem}
+
+/* 카드 */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card-head small{color:var(--muted);font-size:.85rem}
+.fine{font-size:.82rem;color:var(--muted);line-height:1.5}
+
+/* 오늘 두 칸 */
+.today{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slot{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.slot header{display:flex;justify-content:space-between;align-items:baseline}
+.slot-name{font-family:var(--f-display);font-weight:800;font-size:1.1rem}
+.slot-count{font-size:.85rem;color:var(--muted)}
+.slot-state{font-weight:700;font-size:1.02rem}
+.slot-meta{font-size:.8rem;color:var(--muted);line-height:1.45}
+.slot[data-state="taken"]{border-color:var(--ok);background:var(--ok-soft)} .slot[data-state="taken"] .slot-state{color:var(--ok)}
+.slot[data-state="due"]{border-color:var(--due);background:var(--due-soft)} .slot[data-state="due"] .slot-state{color:var(--due)}
+.slot[data-state="late"]{border-color:var(--late);background:var(--late-soft)} .slot[data-state="late"] .slot-state{color:var(--late)}
+
+/* 7일 */
+.week-scroll{overflow-x:auto}
+table.week{width:100%;border-collapse:separate;border-spacing:0 6px;table-layout:fixed;min-width:300px}
+.week th{font-size:.78rem;font-weight:500;color:var(--muted);padding:0 0 2px}
+.week th b{display:block;font-size:.9rem;color:var(--ink);font-weight:700}
+.week th.rowh{text-align:left;width:3.2em;font-weight:700;color:var(--ink);font-size:.85rem}
+.week td{text-align:center;padding:0}
+.dot{display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-size:.68rem;color:var(--muted)}
+.dot i{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);display:block}
+.dot.on i{background:var(--ok-fill);border-color:var(--ok-fill)}
+.dot.miss i{border-color:var(--late);border-style:dashed}
+.dot.pending i{border-color:var(--line);border-style:dotted}
+.week .is-today b{color:var(--accent-ink)}
+.sum{font-weight:700}
+details{border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:700;font-size:.95rem;min-height:40px;display:flex;align-items:center}
+ol.log{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:260px;overflow:auto}
+ol.log li{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;padding:6px 2px;border-bottom:1px dashed var(--line)}
+ol.log li span:last-child{color:var(--muted)}
+
+/* 안내 전화 */
+.script{margin:0;padding:14px 16px;background:var(--sunk);border-radius:12px;font-size:.98rem;line-height:1.6}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.92rem;align-items:baseline}
+.rule dt{font-weight:700;color:var(--accent-ink)}
+.rule dd{margin:0}
+
+/* 재는 법 */
+.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:2rem 1fr;gap:10px;align-items:start;font-size:.97rem}
+.steps li::before{counter-increment:s;content:counter(s);width:2rem;height:2rem;border-radius:50%;background:var(--brand-soft);color:var(--ink);font-weight:800;display:flex;align-items:center;justify-content:center;font-family:var(--f-display)}
+.steps em{font-style:normal;font-weight:700;color:var(--late)}
+.videos{display:grid;gap:10px}
+.video{display:grid;grid-template-columns:88px 1fr;gap:14px;align-items:center;text-decoration:none;border:1.5px solid var(--line);border-radius:14px;padding:10px;background:var(--surface);min-height:72px}
+.video:hover{border-color:var(--brand)}
+.thumb{width:88px;aspect-ratio:16/10;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;max-width:100%}
+.thumb::after{content:"";border-style:solid;border-width:10px 0 10px 17px;border-color:transparent transparent transparent var(--brand-ink);margin-left:4px}
+.video b{display:block;font-size:1rem;line-height:1.35}
+.video small{color:var(--muted);font-size:.82rem}
+.video span{min-width:0}
+
+.embed{margin:0;display:flex;flex-direction:column;gap:8px}
+.frame{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:var(--sunk)}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.embed figcaption{display:flex;flex-direction:column;gap:2px}
+.embed figcaption b{font-size:1rem}
+.embed figcaption span{font-size:.82rem;color:var(--muted)}
+.embed figcaption a{color:var(--accent-ink);font-weight:700}
+
+/* 약 찾기 */
+.search{display:flex;gap:8px}
+.search input{flex:1;min-width:0;font:inherit;font-size:1.05rem;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-height:52px}
+.search input:focus{outline:3px solid var(--brand-ring);border-color:var(--brand)}
+.label{font-size:.85rem;font-weight:700;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{text-decoration:none;font-size:.92rem;font-weight:500;border:1.5px solid var(--line);border-radius:999px;padding:7px 13px;background:var(--surface);min-height:40px;display:inline-flex;align-items:center}
+.chip:hover{border-color:var(--brand)}
+
+/* 연락처 */
+.contacts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.contacts div{background:var(--sunk);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column}
+.contacts span{font-size:.8rem;color:var(--muted)}
+.contacts b{font-size:1.1rem;user-select:all}
+.contacts .em{background:var(--late-soft)} .contacts .em b{color:var(--late)}
+footer{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.6}
+
+/* 전화 화면 */
+.call{position:fixed;inset:0;z-index:50;background:var(--call-bg);color:var(--call-fg);display:flex;align-items:center;justify-content:center;
+  padding:calc(24px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.call-inner{width:100%;max-width:24rem;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:18px;text-align:center}
+.call-top{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:4vh}
+.call-kind{font-size:.85rem;color:var(--call-dim);letter-spacing:.06em}
+.call-avatar{width:104px;height:104px;border-radius:50%;background:#1C3550;display:flex;align-items:center;justify-content:center;position:relative}
+.call-avatar svg{width:46px;height:46px;fill:var(--call-fg)}
+.call.ringing .call-avatar::before,.call.ringing .call-avatar::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid #4D7BA6;animation:ring 1.8s ease-out infinite}
+.call.ringing .call-avatar::after{animation-delay:.9s}
+@keyframes ring{from{transform:scale(1);opacity:.9}to{transform:scale(1.7);opacity:0}}
+.call h2{font-size:1.5rem;color:var(--call-fg)}
+.call-num{color:var(--call-dim);font-size:.95rem}
+.call-status{font-size:1.05rem;font-weight:700;color:var(--call-fg)}
+.call-caption{background:rgba(255,255,255,.08);border-radius:14px;padding:16px;font-size:1.1rem;line-height:1.65;max-width:22rem}
+.call-note{font-size:.78rem;color:var(--call-dim)}
+.call-actions{display:flex;justify-content:space-around;width:100%;padding-bottom:3vh}
+.call-btn{appearance:none;border:0;cursor:pointer;width:76px;height:76px;border-radius:50%;color:#fff;font:inherit;font-weight:700;display:flex;align-items:center;justify-content:center}
+.call-btn svg{width:34px;height:34px;fill:#fff}
+.call-btn.accept{background:var(--accept)} .call-btn.decline{background:var(--decline)}
+.call-btn.decline svg{transform:rotate(135deg)}
+.call-btn-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:.9rem;color:var(--call-dim)}
+@media (prefers-reduced-motion: reduce){ .call.ringing .call-avatar::before,.call.ringing .call-avatar::after{animation:none} .take{transition:none} }
+@media (max-width:360px){ .today{grid-template-columns:1fr} .contacts{grid-template-columns:1fr} }
+</style>
+<style>[hidden]{display:none!important} img{max-width:100%} body{margin:0} :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <span>○○대학교병원 · 신경과 · 심장내과</span>
+    <span><b>김동남</b> 님</span>
+  </div>
+
+  <section class="hero" aria-label="약 먹은 시각 기록">
+    <p class="clock" id="clock">지금<span class="num" id="clockTime">—</span></p>
+    <button type="button" class="take" id="take" aria-describedby="takeSub">
+      <span class="take-slot" id="takeSlot">지금은 아침 약</span>
+      <span class="take-main" id="takeMain">약 먹었어요</span>
+      <span class="take-sub" id="takeSub">약을 삼킨 뒤 누르면 지금 시각이 초 단위로 기록돼요</span>
+    </button>
+    <div class="panel" id="panel" hidden></div>
+    <p class="store-note" id="storeNote">기록 저장 위치를 확인하는 중이에요</p>
+  </section>
+
+  <section class="today" aria-label="오늘 복약">
+    <article class="slot" id="slot-am" data-state="wait">
+      <header><span class="slot-name">아침 약</span><span class="slot-count">6알</span></header>
+      <p class="slot-state" id="am-state">—</p>
+      <p class="slot-meta" id="am-meta"></p>
+    </article>
+    <article class="slot" id="slot-pm" data-state="wait">
+      <header><span class="slot-name">저녁 약</span><span class="slot-count">3알</span></header>
+      <p class="slot-state" id="pm-state">—</p>
+      <p class="slot-meta" id="pm-meta"></p>
+    </article>
+  </section>
+
+  <section class="card" aria-labelledby="weekH">
+    <div class="card-head"><h2 id="weekH">최근 7일</h2><small id="weekSum" class="sum">아직 기록이 없어요</small></div>
+    <div class="week-scroll"><table class="week" id="week"></table></div>
+    <details>
+      <summary>기록 전체 보기 (초 단위)</summary>
+      <ol class="log" id="log"></ol>
+    </details>
+  </section>
+
+  <section class="card" aria-labelledby="callH">
+    <h2 id="callH">깜빡하시면 안내 전화가 가요</h2>
+    <dl class="rule">
+      <dt>언제</dt><dd>평소 약 드시던 시간에서 <b>2시간</b>이 지나도 버튼을 누르지 않으셨을 때</dd>
+      <dt>내용</dt><dd>자동 안내 음성이 한 번 나오고 끊깁니다</dd>
+    </dl>
+    <blockquote class="script" id="scriptText">김동남 환자님, 약 복용시간입니다. 잊지 말고 챙겨 드세요. 적은 비용으로 건강을 지키는 가장 효율적인 방법입니다.</blockquote>
+    <button type="button" class="btn primary" id="demoCall">안내 전화 미리 들어 보기</button>
+    <p class="fine">시제품 안내: 지금은 이 화면이 열려 있을 때 화면에서 전화가 울립니다. 실제 휴대폰으로 거는 전화는 전화 발신 서비스를 연결해야 작동합니다.</p>
+  </section>
+
+  <section class="card" aria-labelledby="howH">
+    <h2 id="howH">맥박·혈압 재는 법</h2>
+    <ol class="steps">
+      <li><span>손바닥을 위로 하고, <b>엄지 쪽 손목</b>에 검지·중지 두 손가락을 댑니다.</span></li>
+      <li><span>콩브럭(노란 약) 드시기 전, <b>1분 동안</b> 뛰는 횟수를 셉니다.</span></li>
+      <li><span><em>50번보다 적으면</em> 콩브럭만 빼고 나머지 약은 드신 뒤 병원에 전화하세요.</span></li>
+    </ol>
+    <div class="videos">
+      <figure class="embed">
+        <div class="frame"><iframe src="https://www.youtube-nocookie.com/embed/4vHCoZgOrXw?rel=0" title="올바른 가정혈압 측정" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+        <figcaption><b>올바른 가정혈압 측정</b><span>서울아산병원 · 건강플러스 · <a href="https://www.youtube.com/watch?v=4vHCoZgOrXw" target="_blank" rel="noopener">YouTube에서 열기</a></span></figcaption>
+      </figure>
+      <figure class="embed">
+        <div class="frame"><iframe src="https://www.youtube-nocookie.com/embed/2kZ2WWSCdDU?rel=0" title="맥박 정확하게 재는 방법" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+        <figcaption><b>맥박 정확하게 재는 방법</b><span>TV조선 〈내 몸 사용설명서〉 · <a href="https://www.youtube.com/watch?v=2kZ2WWSCdDU" target="_blank" rel="noopener">YouTube에서 열기</a></span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="findH">
+    <h2 id="findH">약 찾아보기</h2>
+    <form id="searchForm" role="search" class="search" novalidate>
+      <label for="q" class="sr" hidden>약 이름</label>
+      <input id="q" name="q" type="search" placeholder="약 이름 (예: 콩브럭)" autocomplete="off" enterkeyhint="search" aria-label="약 이름">
+      <a class="btn primary" id="searchGo" href="https://www.health.kr/" target="_blank" rel="noopener">찾기</a>
+    </form>
+    <p class="label">내 약 바로 찾기</p>
+    <div class="chips" id="chips"></div>
+    <p class="fine">약학정보원(health.kr) 검색 결과가 새 창으로 열립니다. 낱알 사진과 복약 정보를 볼 수 있어요.</p>
+  </section>
+
+  <section class="card" aria-labelledby="telH">
+    <div class="card-head"><h2 id="telH">병원 연락처</h2><small>발표용 가상 번호</small></div>
+    <div class="contacts">
+      <div><span>병동</span><b class="num">1234-0000</b></div>
+      <div><span>외래 예약</span><b class="num">1234-0001</b></div>
+      <div class="em"><span>응급실</span><b class="num">1234-0119</b></div>
+      <div><span>약값 상담 (사회사업팀)</span><b class="num">1234-5678</b></div>
+    </div>
+  </section>
+
+  <footer>간호학과 PBL 시제품 · 가상 사례(김동남 님)<br>약 검색: 약학정보원 · 영상: 각 YouTube 채널</footer>
+</div>
+
+<div class="call" id="call" hidden role="dialog" aria-modal="true" aria-labelledby="callWho">
+  <div class="call-inner">
+    <div class="call-top">
+      <p class="call-kind" id="callKind">자동 안내 전화</p>
+      <div class="call-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></div>
+      <h2 id="callWho">○○대학교병원 복약 안내</h2>
+      <p class="call-num num">1234-0000</p>
+      <p class="call-status num" id="callStatus" aria-live="polite">전화가 왔어요</p>
+    </div>
+    <p class="call-caption" id="callCaption" hidden></p>
+    <p class="call-note" id="callNote" hidden></p>
+    <div class="call-actions" id="callActions">
+      <div class="call-btn-wrap"><button type="button" class="call-btn decline" id="callDecline" aria-label="거절"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button>거절</div>
+      <div class="call-btn-wrap"><button type="button" class="call-btn accept" id="callAccept" aria-label="받기"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button>받기</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const PATIENT = "김동남";
+const DEFAULTS = { am: 8*60+30, pm: 18*60+30 };   // 식후 30분 기준 기본값
+const GRACE = 120;          // 평소 시간 + 2시간 지나면 안내 전화
+const CALL_WINDOW = 90;     // 그 뒤 90분 안에 화면이 열려 있으면 울림
+const MSG = PATIENT + " 환자님, 약 복용시간입니다. 잊지 말고 챙겨 드세요. 적은 비용으로 건강을 지키는 가장 효율적인 방법입니다.";
+const SLOT_NAME = { am: "아침 약", pm: "저녁 약" };
+const MEDS = ["경동아스피린","플라빅스","리피토","케이캡","자누메트엑스알","콩브럭","다이아벡스","자디앙"];
+const DAYS = "일월화수목금토";
+const $ = id => document.getElementById(id);
+
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+const hms = d => pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+function kor(h, m, s){ const ap = h < 12 ? "오전" : "오후"; const h12 = h % 12 === 0 ? 12 : h % 12; return ap + " " + h12 + ":" + pad(m) + (s === undefined ? "" : ":" + pad(s)); }
+const korHms = t => { const p = t.split(":").map(Number); return kor(p[0], p[1], p[2]); };
+const korMin = x => kor(Math.floor(x/60) % 24, x % 60);
+const slotFor = d => d.getHours() < 14 ? "am" : "pm";
+const searchUrl = w => "https://www.health.kr/searchResult?search_word=" + encodeURIComponent(w) + "&search_flag=all";
+
+/* ── 기록 저장: 공유 기록부(db) 우선, 안 되면 이 휴대폰 */
+let db = null, dbRecs = null, store = "init";
+let localRecs = readLocal("kdn-doses", []);
+const pending = new Map();
+let calls = {};
+function readLocal(k, d){ try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+function writeLocal(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+const validRec = r => r && typeof r.ms === "number" && (r.slot === "am" || r.slot === "pm") && /^\d{4}-\d\d-\d\d$/.test(r.date || "") && /^\d\d:\d\d:\d\d$/.test(r.time || "");
+function allRecs(){
+  const m = new Map();
+  for (const r of localRecs) if (validRec(r)) m.set(r.id, r);
+  if (dbRecs) for (const r of dbRecs) m.set(r.id, r);
+  for (const r of pending.values()) m.set(r.id, r);
+  return [...m.values()].sort((a, b) => b.ms - a.ms);
+}
+function setStore(mode){
+  store = mode;
+  $("storeNote").textContent = mode === "db" ? "기록은 병원 기록부에 초 단위로 저장돼요"
+    : mode === "slow" ? "병원 기록부에 연결하는 중이에요. 누르신 기록은 이 휴대폰에도 남아요"
+    : mode === "init" ? "기록 저장 위치를 확인하는 중이에요"
+    : "기록은 이 휴대폰에 초 단위로 저장돼요";
+}
+
+/* ── 평소 시간: 최근 7번(하루 첫 기록)의 가운데 값, 3번 미만이면 기본값 */
+function usual(slot){
+  const byDay = new Map();
+  for (const r of allRecs()) if (r.slot === slot) { const p = byDay.get(r.date); if (!p || r.ms < p.ms) byDay.set(r.date, r); }
+  const mins = [...byDay.values()].sort((a, b) => b.ms - a.ms).slice(0, 7)
+    .map(r => { const p = r.time.split(":").map(Number); return p[0]*60 + p[1]; }).sort((a, b) => a - b);
+  if (mins.length < 3) return { min: DEFAULTS[slot], auto: false, n: mins.length };
+  const k = Math.floor(mins.length / 2);
+  return { min: mins.length % 2 ? mins[k] : Math.round((mins[k-1] + mins[k]) / 2), auto: true, n: mins.length };
+}
+function firstOf(date, slot){ return allRecs().filter(r => r.date === date && r.slot === slot).sort((a, b) => a.ms - b.ms)[0]; }
+function status(slot, now){
+  const u = usual(slot), deadline = u.min + GRACE, nowMin = now.getHours()*60 + now.getMinutes();
+  const taken = firstOf(ymd(now), slot);
+  if (taken) return { state: "taken", taken, u, deadline };
+  if (nowMin >= deadline) return { state: "late", u, deadline, nowMin };
+  if (nowMin >= u.min - 30) return { state: "due", u, deadline };
+  return { state: "wait", u, deadline };
+}
+
+/* ── 화면 그리기 */
+function renderClock(now){
+  $("clockTime").textContent = (now.getMonth()+1) + "월 " + now.getDate() + "일 (" + DAYS[now.getDay()] + ") " + kor(now.getHours(), now.getMinutes(), now.getSeconds());
+}
+function renderButton(now){
+  const take = $("take");
+  if (take.classList.contains("done")) return;
+  const slot = slotFor(now), st = status(slot, now);
+  $("takeSlot").textContent = "지금은 " + SLOT_NAME[slot];
+  $("takeSub").textContent = st.state === "taken"
+    ? "오늘 " + SLOT_NAME[slot] + "은 " + korHms(st.taken.time) + "에 기록됐어요"
+    : "약을 삼킨 뒤 누르면 지금 시각이 초 단위로 기록돼요";
+}
+function renderSlots(now){
+  const today = ymd(now);
+  for (const slot of ["am", "pm"]) {
+    const st = status(slot, now), el = $("slot-" + slot);
+    el.dataset.state = st.state;
+    $(slot + "-state").textContent =
+      st.state === "taken" ? "✓ " + korHms(st.taken.time) + " 드심"
+      : st.state === "late" ? "아직 기록이 없어요"
+      : st.state === "due" ? "지금 드실 시간이에요" : "아직 시간 전이에요";
+    const c = calls[today + "-" + slot];
+    const callTxt = c && c.time ? " · 안내 전화 " + korHms(c.time) : "";
+    $(slot + "-meta").textContent = "평소 " + korMin(st.u.min) + (st.u.auto ? " (최근 " + st.u.n + "번 기준)" : " (기본값)")
+      + " · " + korMin(st.deadline) + " 지나면 안내 전화" + callTxt;
+  }
+}
+function renderWeek(now){
+  const recs = allRecs(), today = ymd(now);
+  const days = []; for (let i = 6; i >= 0; i--) { const d = new Date(now); d.setDate(now.getDate() - i); days.push(d); }
+  const earliest = recs.length ? recs[recs.length - 1].date : null;
+  const t = $("week"); t.textContent = "";
+  const head = t.insertRow(); const h0 = document.createElement("th"); h0.className = "rowh"; head.appendChild(h0);
+  for (const d of days) { const th = document.createElement("th"); if (ymd(d) === today) th.className = "is-today";
+    const b = document.createElement("b"); b.textContent = d.getDate(); th.append(DAYS[d.getDay()], b); head.appendChild(th); }
+  let took = 0, due = 0;
+  for (const slot of ["am", "pm"]) {
+    const tr = t.insertRow(); const th = document.createElement("th"); th.className = "rowh"; th.textContent = slot === "am" ? "아침" : "저녁"; tr.appendChild(th);
+    for (const d of days) {
+      const ds = ymd(d), r = firstOf(ds, slot), td = tr.insertCell(), dot = document.createElement("span"), i = document.createElement("i"), cap = document.createElement("span");
+      dot.className = "dot"; cap.className = "num";
+      const counted = earliest && ds >= earliest && (ds < today || r || (ds === today && status(slot, now).state === "late"));
+      if (r) { dot.classList.add("on"); cap.textContent = r.time.slice(0, 5); took++; due++; i.title = korHms(r.time); }
+      else if (counted) { dot.classList.add("miss"); cap.textContent = "–"; due++; }
+      else { dot.classList.add("pending"); cap.textContent = " "; }
+      dot.append(i, cap); td.appendChild(dot);
+    }
+  }
+  $("weekSum").textContent = due ? "지난 기록 " + due + "번 중 " + took + "번 드심" : "아직 기록이 없어요";
+  const log = $("log"); log.textContent = "";
+  if (!recs.length) { const li = document.createElement("li"); li.textContent = "약을 드신 뒤 큰 버튼을 누르면 여기에 쌓여요"; log.appendChild(li); }
+  for (const r of recs.slice(0, 60)) {
+    const li = document.createElement("li"), a = document.createElement("span"), b = document.createElement("span");
+    const d = new Date(r.ms);
+    a.className = "num"; a.textContent = (d.getMonth()+1) + "/" + d.getDate() + " (" + DAYS[d.getDay()] + ") " + korHms(r.time);
+    b.textContent = SLOT_NAME[r.slot]; li.append(a, b); log.appendChild(li);
+  }
+}
+function renderAll(){ const now = new Date(); renderClock(now); renderButton(now); renderSlots(now); renderWeek(now); }
+
+/* ── 버튼 누름 → 기록 */
+let lastRec = null, doneTimer = null;
+function panel(kind, title, body, buttons){
+  const p = $("panel"); p.className = "panel " + (kind || ""); p.textContent = "";
+  const s = document.createElement("strong"); s.textContent = title; p.appendChild(s);
+  if (body) { const q = document.createElement("p"); q.textContent = body; p.appendChild(q); }
+  if (buttons && buttons.length) { const row = document.createElement("div"); row.className = "row";
+    for (const [label, cls, fn] of buttons) { const b = document.createElement("button"); b.type = "button"; b.className = "btn grow " + (cls || ""); b.textContent = label; b.addEventListener("click", fn); row.appendChild(b); }
+    p.appendChild(row); }
+  p.hidden = false;
+}
+const hidePanel = () => { $("panel").hidden = true; };
+
+function saveRec(rec){
+  const body = { ms: rec.ms, date: rec.date, time: rec.time, slot: rec.slot };
+  pending.set(rec.id, rec);
+  const toLocal = (msg) => { pending.delete(rec.id); rec.local = true; localRecs.push(rec); writeLocal("kdn-doses", localRecs); if (msg) $("storeNote").textContent = msg; renderAll(); };
+  if (db && store === "db") {
+    const ref = db.collection("doses").doc(rec.id);
+    rec.p = ref.set(body).then(() => { pending.delete(rec.id); rec.ref = ref; })
+      .catch(e => (e && e.code === "unavailable")
+        ? new Promise(r => setTimeout(r, 700 + Math.random()*800)).then(() => ref.set(body)).then(() => { pending.delete(rec.id); rec.ref = ref; })
+        : Promise.reject(e))
+      .catch(() => toLocal("병원 기록부에 저장하지 못해 이 휴대폰에 저장했어요"));
+  } else { toLocal(); rec.p = Promise.resolve(); }
+}
+function record(slot){
+  const now = new Date();
+  const rec = { id: "d" + now.getTime(), ms: now.getTime(), date: ymd(now), time: hms(now), slot };
+  saveRec(rec); lastRec = rec;
+  const take = $("take");
+  take.classList.add("done");
+  $("takeSlot").textContent = SLOT_NAME[slot];
+  $("takeMain").textContent = "기록됐어요";
+  $("takeSub").textContent = korHms(rec.time);
+  clearTimeout(doneTimer);
+  doneTimer = setTimeout(() => { take.classList.remove("done"); $("takeMain").textContent = "약 먹었어요"; renderAll(); }, 6000);
+  const other = slot === "am" ? "pm" : "am";
+  panel("ok", SLOT_NAME[slot] + " · " + korHms(rec.time) + " 기록됐어요", "잘했어요. 다음 약도 드신 뒤 눌러 주세요.", [
+    ["잘못 눌렀어요", "", () => undo(rec)],
+    [SLOT_NAME[other] + "이에요", "", () => swap(rec, other)],
+  ]);
+  renderAll();
+}
+async function undo(rec){
+  hidePanel();
+  try { await rec.p; } catch (e) {}
+  pending.delete(rec.id);
+  if (rec.ref) { try { await rec.ref.delete(); } catch (e) {} }
+  localRecs = localRecs.filter(r => r.id !== rec.id); writeLocal("kdn-doses", localRecs);
+  if (dbRecs) dbRecs = dbRecs.filter(r => r.id !== rec.id);
+  clearTimeout(doneTimer); $("take").classList.remove("done"); $("takeMain").textContent = "약 먹었어요";
+  panel("", "기록을 지웠어요", "약을 드신 뒤 다시 눌러 주세요.", []);
+  setTimeout(hidePanel, 4000); renderAll();
+}
+async function swap(rec, slot){
+  hidePanel();
+  try { await rec.p; } catch (e) {}
+  rec.slot = slot;
+  if (rec.ref) { try { await rec.ref.update({ slot }); } catch (e) {} }
+  const l = localRecs.find(r => r.id === rec.id); if (l) { l.slot = slot; writeLocal("kdn-doses", localRecs); }
+  if (dbRecs) { const d = dbRecs.find(r => r.id === rec.id); if (d) dbRecs = dbRecs.map(r => r.id === rec.id ? Object.assign({}, r, { slot }) : r); }
+  $("takeSlot").textContent = SLOT_NAME[slot];
+  panel("ok", SLOT_NAME[slot] + " · " + korHms(rec.time) + "으로 바꿨어요", "", []);
+  setTimeout(hidePanel, 4000); renderAll();
+}
+$("take").addEventListener("click", () => {
+  const now = new Date(), slot = slotFor(now), st = status(slot, now);
+  if (st.state === "taken") {
+    panel("warn", "오늘 " + SLOT_NAME[slot] + "은 이미 " + korHms(st.taken.time) + "에 기록돼 있어요",
+      "약을 두 번 드시면 안 됩니다. 이미 드셨다면 기록하지 마세요.", [
+        ["기록하지 않기", "primary", hidePanel],
+        ["그래도 새로 기록", "", () => { hidePanel(); record(slot); }],
+      ]);
+    return;
+  }
+  record(slot);
+});
+
+/* ── 안내 전화 (화면 시연) */
+let actx = null, ringTimer = null, callOpen = false, callTimer = null, talkTimer = null, callCtx = null;
+const fired = new Set(readLocal("kdn-calls-fired", []));
+function ensureAudio(){ try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch (e) { actx = null; } }
+function burst(){
+  if (!actx || actx.state !== "running") return;
+  const t = actx.currentTime;
+  for (const f of [440, 480]) { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.05); g.gain.setValueAtTime(0.07, t + 1.0); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 1.15); }
+}
+function startRing(){ burst(); ringTimer = setInterval(burst, 3000); try { navigator.vibrate && navigator.vibrate([700, 300, 700]); } catch (e) {} }
+function stopRing(){ clearInterval(ringTimer); ringTimer = null; try { navigator.vibrate && navigator.vibrate(0); } catch (e) {} }
+function logCall(result){
+  if (!callCtx || !callCtx.auto || !db || store !== "db") return;
+  const c = callCtx, ref = db.collection("calls").doc(c.key);
+  c.q = (c.q || Promise.resolve()).then(() => ref.set({ ms: c.ms, date: c.date, time: c.time, slot: c.slot, result })).catch(() => {});
+}
+function openCall(opts){
+  if (callOpen) return;
+  callOpen = true;
+  const now = new Date();
+  callCtx = Object.assign({ ms: now.getTime(), date: ymd(now), time: hms(now) }, opts);
+  const el = $("call");
+  $("callKind").textContent = opts.auto ? "자동 안내 전화 · " + SLOT_NAME[opts.slot] : "안내 전화 미리 듣기";
+  $("callStatus").textContent = "전화가 왔어요";
+  $("callCaption").hidden = true; $("callNote").hidden = true; $("callActions").hidden = false;
+  el.classList.add("ringing"); el.hidden = false;
+  startRing(); logCall("ringing");
+  $("callAccept").focus();
+  callTimer = setTimeout(() => endCall("받지 않으셨어요", "missed"), 45000);
+}
+function endCall(msg, result){
+  stopRing(); clearTimeout(callTimer); clearInterval(talkTimer);
+  try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+  $("call").classList.remove("ringing"); $("callActions").hidden = true;
+  $("callStatus").textContent = msg; logCall(result);
+  setTimeout(() => { $("call").hidden = true; callOpen = false; callCtx = null; renderAll(); $("demoCall").focus(); }, 1800);
+}
+function speak(text, done){
+  let finished = false; const fin = () => { if (finished) return; finished = true; done(); };
+  const synth = window.speechSynthesis;
+  if (!synth || typeof SpeechSynthesisUtterance === "undefined") { setTimeout(fin, 9000); return false; }
+  try {
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text); u.lang = "ko-KR"; u.rate = 0.92;
+    const v = synth.getVoices().find(x => /^ko/i.test(x.lang)); if (v) u.voice = v;
+    const guard = setTimeout(fin, 20000);
+    u.onend = () => { clearTimeout(guard); setTimeout(fin, 500); };
+    u.onerror = () => { clearTimeout(guard); setTimeout(fin, 7000); };
+    synth.speak(u);
+    return !!v || synth.getVoices().length === 0;
+  } catch (e) { setTimeout(fin, 9000); return false; }
+}
+$("callAccept").addEventListener("click", () => {
+  stopRing(); clearTimeout(callTimer); ensureAudio();
+  $("call").classList.remove("ringing"); $("callActions").hidden = true;
+  const start = Date.now();
+  const tick = () => { const s = Math.floor((Date.now() - start) / 1000); $("callStatus").textContent = "통화 중 " + Math.floor(s/60) + ":" + pad(s % 60); };
+  tick(); talkTimer = setInterval(tick, 1000);
+  $("callCaption").textContent = MSG; $("callCaption").hidden = false;
+  const voiced = speak(MSG, () => endCall("통화가 끝났어요", "answered"));
+  if (!voiced) { $("callNote").textContent = "이 기기에서는 한국어 음성이 없어 자막으로 보여 드려요"; $("callNote").hidden = false; }
+});
+$("callDecline").addEventListener("click", () => endCall("전화를 거절하셨어요", "declined"));
+document.addEventListener("keydown", e => { if (e.key === "Escape" && callOpen && !$("callActions").hidden) endCall("전화를 거절하셨어요", "declined"); });
+$("demoCall").addEventListener("click", () => { ensureAudio(); openCall({ auto: false }); });
+try { window.speechSynthesis && window.speechSynthesis.getVoices(); } catch (e) {}
+
+function checkOverdue(now){
+  if (callOpen || store === "init") return;
+  const today = ymd(now);
+  for (const slot of ["am", "pm"]) {
+    const st = status(slot, now);
+    if (st.state !== "late" || st.nowMin > st.deadline + CALL_WINDOW) continue;
+    const key = today + "-" + slot;
+    if (calls[key] || fired.has(key)) continue;
+    fired.add(key); writeLocal("kdn-calls-fired", [...fired].slice(-20));
+    ensureAudio(); openCall({ auto: true, slot, key });
+    break;
+  }
+}
+
+/* ── 약 찾기 */
+const chips = $("chips");
+for (const m of MEDS) { const a = document.createElement("a"); a.className = "chip"; a.href = searchUrl(m); a.target = "_blank"; a.rel = "noopener"; a.textContent = m; chips.appendChild(a); }
+const q = $("q"), go = $("searchGo");
+const syncSearch = () => { const w = q.value.trim(); go.href = w ? searchUrl(w) : "https://www.health.kr/"; };
+q.addEventListener("input", syncSearch);
+$("searchForm").addEventListener("submit", e => { e.preventDefault(); syncSearch(); if (q.value.trim()) go.click(); });
+
+/* ── 시작 */
+renderAll();
+let n = 0;
+setInterval(() => { const now = new Date(); renderClock(now); if (n++ % 5 === 0) { renderButton(now); renderSlots(now); } if (n % 15 === 0) { renderWeek(now); checkOverdue(now); } }, 1000);
+
+(async () => {
+  try { db = (window.claude && window.claude.use) ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStore("local"); renderAll(); checkOverdue(new Date()); return; }
+  let loaded = false;
+  const slow = setTimeout(() => { if (!loaded) setStore("slow"); }, 10000);
+  db.collection("doses").orderBy("ms", "desc").limit(400).onSnapshot(snap => {
+    dbRecs = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(validRec);
+    for (const r of dbRecs) pending.delete(r.id);
+    if (!snap.metadata.fromCache) { loaded = true; clearTimeout(slow); }
+    if (store !== "db") setStore("db");
+    renderAll();
+    if (loaded) checkOverdue(new Date());
+  }, () => { clearTimeout(slow); dbRecs = null; setStore("local"); renderAll(); });
+  db.collection("calls").orderBy("ms", "desc").limit(40).onSnapshot(snap => {
+    calls = {}; for (const d of snap.docs) calls[d.id] = d.data();
+    renderSlots(new Date());
+  }, () => {});
+})();
+})();
+</script>
+
+</body>
+</html>
