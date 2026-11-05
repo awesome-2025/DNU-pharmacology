@@ -76,6 +76,19 @@ a{color:inherit}
 .say ol{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:4px;font-size:.97rem;line-height:1.5}
 .say dl{margin:4px 0 0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:.88rem;border-top:1px solid rgba(255,255,255,.18);padding-top:10px}
 .say dt{color:var(--call-dim)} .say dd{margin:0}
+.send{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.send li{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;font-size:.92rem;line-height:1.45;opacity:.3;transition:opacity .25s}
+.send li.on{opacity:1}
+.send li i{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.45);margin-top:1px;display:block;position:relative}
+.send li.busy i{border-color:#F8D9D2;border-top-color:transparent;animation:spin .8s linear infinite}
+.send li.done i{background:#2FB27A;border-color:#2FB27A}
+.send li.done i::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #FFFFFF;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.send li span{display:grid;grid-template-columns:5.6em 1fr;column-gap:8px}
+.send b{color:var(--call-dim);font-weight:700}
+.send em{font-style:normal}
+.calm{background:rgba(47,178,122,.2);border-radius:12px;padding:12px 14px;font-size:1rem;line-height:1.6;color:#FFFFFF}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){ .send li.busy i{animation:none} }
 
 /* 큰 버튼 */
 .hero{display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:6px 4px;text-align:center}
@@ -342,19 +355,17 @@ footer{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.6}
       <p class="call-status num" id="sosStatus" aria-live="polite">연결 중…</p>
     </div>
     <div class="say" id="sosSay" hidden>
-      <p class="say-h">이렇게 말씀하세요</p>
-      <ol>
-        <li>집 주소를 먼저 말하세요.</li>
-        <li>증상과 <b>시작된 시각</b>을 말하세요. (예: "8시쯤부터 오른팔에 힘이 없어요")</li>
-        <li>"피를 묽게 하는 약(아스피린·플라빅스)을 먹고 있어요."</li>
-      </ol>
-      <p class="say-h">구급대원에게 이 화면을 보여 주세요</p>
-      <dl>
-        <dt>환자</dt><dd>김동남 · 56세 남자</dd>
-        <dt>병력</dt><dd>목 혈관 스텐트(7/16) · 심장 혈관 3곳 좁아짐 · 당뇨</dd>
-        <dt>먹는 약</dt><dd>아스피린 · 플라빅스 외 6가지</dd>
-        <dt>다니는 병원</dt><dd>동남보건대학교병원 신경과 · 심장내과</dd>
-      </dl>
+      <p class="say-h" id="sosHead">119에 자동으로 보내고 있어요</p>
+      <ul class="send" id="sosList">
+        <li><i></i><span><b>위치</b>등록된 집 주소 · 휴대폰 GPS</span></li>
+        <li><i></i><span><b>환자</b>김동남 · 56세 남자</span></li>
+        <li><i></i><span><b>병력</b>목 혈관 스텐트(7/16) · 심장 혈관 3곳 좁아짐 · 당뇨</span></li>
+        <li><i></i><span><b>먹는 약</b>아스피린 · 플라빅스(피를 묽게 하는 약) 외 6가지</span></li>
+        <li><i></i><span><b>오늘 복약</b><em id="sosDose">–</em></span></li>
+        <li><i></i><span><b>다니는 병원</b>동남보건대학교병원 신경과 · 심장내과</span></li>
+        <li><i></i><span><b>보호자</b>등록된 가족에게 문자 알림</span></li>
+      </ul>
+      <p class="calm" id="sosCalm" hidden>말씀하지 않으셔도 됩니다. 정보가 모두 전달됐어요.<br><b>전화를 끊지 말고 그대로 기다리세요.</b></p>
     </div>
     <div class="call-actions">
       <div class="call-btn-wrap"><button type="button" class="call-btn decline" id="sosEnd" aria-label="끊기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button>끊기</div>
@@ -665,25 +676,42 @@ function sosTone(){
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t + 0.04); g.gain.setValueAtTime(0.06, t + 1.0); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.05);
   o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 1.1);
 }
+const SOS_MSG = "자동 신고입니다. 환자는 김동남, 쉰여섯 살 남성입니다. 목 혈관에 스텐트 시술을 받았고, 피를 묽게 하는 약 아스피린과 플라빅스를 먹고 있습니다. 환자가 말을 하지 못할 수 있습니다. 위치 정보를 일일구로 보냈습니다.";
+let sosStep = null;
+function todayDose(){
+  const t = ymd(new Date());
+  return ["am", "pm"].map(sl => { const r = firstOf(t, sl); return SLOT_NAME[sl] + " " + (r ? korHms(r.time) + " 드심" : "기록 없음"); }).join(" · ");
+}
 function openSos(){
   if (callOpen) return;
   callOpen = true; ensureAudio();
   const el = $("sosCall");
-  $("sosStatus").textContent = "연결 중…"; $("sosSay").hidden = true;
+  $("sosStatus").textContent = "연결 중…"; $("sosSay").hidden = true; $("sosCalm").hidden = true;
+  $("sosHead").textContent = "119에 자동으로 보내고 있어요";
   el.classList.add("ringing"); el.hidden = false; el.scrollTop = 0;
   sosTone(); sosRing = setInterval(sosTone, 2000);
   $("sosEnd").focus();
   sosTimer = setTimeout(() => {
     clearInterval(sosRing); el.classList.remove("ringing");
-    const start = Date.now();
-    const tick = () => { const s = Math.floor((Date.now() - start) / 1000); $("sosStatus").textContent = "통화 중 " + Math.floor(s / 60) + ":" + pad(s % 60); };
+    const start = Date.now(); let sending = true;
+    const tick = () => { const s = Math.floor((Date.now() - start) / 1000); $("sosStatus").textContent = (sending ? "자동 신고 중 " : "통화 중 ") + Math.floor(s / 60) + ":" + pad(s % 60); };
     tick(); sosTalk = setInterval(tick, 1000);
+    $("sosDose").textContent = todayDose();
+    const items = [...$("sosList").children];
+    items.forEach(li => { li.className = ""; });
     $("sosSay").hidden = false;
-    speak("119 종합상황실입니다. 주소와 환자 상태를 말씀해 주세요.", () => {});
-  }, 4000);
+    let i = 0;
+    const step = () => {
+      if (i > 0) items[i - 1].className = "on done";
+      if (i < items.length) { items[i].className = "on busy"; i++; sosStep = setTimeout(step, 650); }
+      else { sending = false; tick(); $("sosHead").textContent = "119에 모두 보냈어요"; $("sosCalm").hidden = false; }
+    };
+    step();
+    speak(SOS_MSG, () => {});
+  }, 3500);
 }
 function closeSos(){
-  clearTimeout(sosTimer); clearInterval(sosRing); clearInterval(sosTalk);
+  clearTimeout(sosTimer); clearTimeout(sosStep); clearInterval(sosRing); clearInterval(sosTalk);
   try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
   $("sosCall").classList.remove("ringing"); $("sosStatus").textContent = "통화가 끝났어요";
   setTimeout(() => { $("sosCall").hidden = true; callOpen = false; $("sos").focus(); }, 900);
