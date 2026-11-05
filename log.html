@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>복약 기록 데이터 · 김동남 님</title>
+<meta name="description" content="약 먹었어요 버튼을 누른 시각의 원자료와 복약률, 평균 시각, 빠진 복용.">
+<meta name="theme-color" content="#15314B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 관리용 한 기둥 — 요약 타일 → 시각 분포 → 원자료 표 → 빠진 복용·안내 전화 → 내보내기 → 시연 */
+:root{
+  --bg:#EDF1F4; --surface:#FFFFFF; --sunk:#E2E8EE; --ink:#13263A; --muted:#55687A; --line:#D2DBE3;
+  --brand:#15314B; --brand-ink:#FFFFFF; --brand-ring:#C9D6E3; --brand-soft:#E1E9F1;
+  --am:#2D5E8C; --pm:#1F7A6B; --ok:#1C7363; --ok-soft:#DCEEE9;
+  --late:#B8401F; --late-soft:#FAE2DA; --dup:#996208; --dup-soft:#FAEED3;
+  --grid:#DCE3EA; --accent-ink:#15314B;
+  --f-display:"Gothic A1","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){ :root{
+  --bg:#0B151E; --surface:#13212D; --sunk:#1A2A39; --ink:#E5ECF2; --muted:#9BAEBF; --line:#26394A;
+  --brand:#2E5C88; --brand-ink:#FFFFFF; --brand-ring:#1F3A55; --brand-soft:#1B2F44;
+  --am:#7FB0E0; --pm:#5CC7AE; --ok:#5CC7AE; --ok-soft:#153730;
+  --late:#F28A6B; --late-soft:#3D2018; --dup:#E5B65A; --dup-soft:#382D15;
+  --grid:#22364A; --accent-ink:#5CC7AE;
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+.wrap{max-width:46rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(40px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px}
+h1,h2{font-family:var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:1.7rem;font-weight:900}
+h2{font-size:1.15rem;font-weight:800}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--dup);outline-offset:3px}
+.num{font-variant-numeric:tabular-nums}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:.92rem;color:var(--muted)}
+.top b{color:var(--ink)}
+.back{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:999px;background:var(--brand);color:var(--brand-ink);text-decoration:none;font-weight:700}
+.head{display:flex;flex-direction:column;gap:6px}
+.sub{color:var(--muted)}
+.where{font-size:.85rem;color:var(--muted);background:var(--sunk);border-radius:10px;padding:8px 12px}
+
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile span{font-size:.8rem;color:var(--muted);font-weight:500}
+.tile b{font-family:var(--f-display);font-size:1.55rem;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2}
+.tile small{font-size:.75rem;color:var(--muted)}
+.tile.warn b{color:var(--late)}
+@media (max-width:560px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card-head small{color:var(--muted);font-size:.82rem}
+
+.chart-wrap{overflow-x:auto}
+svg.chart{display:block;width:100%;min-width:520px;height:auto}
+.chart .gridl{stroke:var(--grid);stroke-width:1}
+.chart .ylab,.chart .xlab{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.chart .xlab.today{fill:var(--accent-ink);font-weight:700}
+.chart .usual{stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.chart .usual.am{stroke:var(--am)} .chart .usual.pm{stroke:var(--pm)}
+.chart .latezone{fill:var(--late-soft)}
+.chart .dot.am{fill:var(--am)} .chart .dot.pm{fill:var(--pm)}
+.chart .dot.late{stroke:var(--late);stroke-width:3}
+.chart .dot.sample{opacity:.55}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.legend .k-am{background:var(--am)} .legend .k-pm{background:var(--pm)}
+.legend .k-late{background:var(--late-soft);border:2px solid var(--late);border-radius:3px}
+.legend .k-usual{width:16px;height:0;border-top:2px dashed var(--muted);border-radius:0}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{appearance:none;border:0;background:var(--surface);color:var(--ink);font:inherit;font-size:.88rem;padding:7px 12px;cursor:pointer;min-height:38px}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table.raw{width:100%;border-collapse:collapse;font-size:.88rem;min-width:620px}
+.raw th{position:sticky;top:0;background:var(--sunk);text-align:left;font-weight:700;font-size:.8rem;color:var(--muted);padding:9px 10px;white-space:nowrap}
+.raw td{padding:9px 10px;border-top:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+.raw td.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.78rem;color:var(--muted)}
+.raw td.t{font-weight:700}
+.slot-am{color:var(--am);font-weight:700} .slot-pm{color:var(--pm);font-weight:700}
+.chip{display:inline-block;font-size:.75rem;font-weight:700;border-radius:999px;padding:2px 9px;margin-right:4px}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.late{background:var(--late-soft);color:var(--late)}
+.chip.dup{background:var(--dup-soft);color:var(--dup)}
+.chip.sample{background:var(--sunk);color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:18px 8px}
+
+ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ul.list li{display:flex;justify-content:space-between;gap:12px;padding:9px 2px;border-top:1px dashed var(--line);font-size:.92rem;flex-wrap:wrap}
+ul.list li:first-child{border-top:0}
+ul.list li span:last-child{color:var(--muted)}
+
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{appearance:none;font:inherit;font-weight:700;font-size:.95rem;border-radius:12px;padding:11px 16px;cursor:pointer;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);min-height:46px;flex:1 1 11rem}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.fine{font-size:.8rem;color:var(--muted)}
+.demo{border-style:dashed}
+.confirm{background:var(--late-soft);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+footer{font-size:.78rem;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top">
+    <a class="back" href="./">← 복약 버튼으로</a>
+    <span><b>김동남</b> 님 · 가상 사례</span>
+  </nav>
+
+  <header class="head">
+    <h1>복약 기록 데이터</h1>
+    <p class="sub">"약 먹었어요" 버튼을 누른 시각이 초 단위로 쌓인 원자료입니다.</p>
+    <p class="where" id="where">이 휴대폰(브라우저)에 저장된 기록입니다. 병원 서버로 보내지지 않으니, 외래 때 이 화면을 보여 주거나 CSV로 내려받아 전달하세요.</p>
+  </header>
+
+  <section class="tiles" aria-label="요약">
+    <div class="tile"><span>복약률</span><b id="tRate">–</b><small id="tRateSub">기록이 쌓이면 계산돼요</small></div>
+    <div class="tile"><span>총 기록</span><b id="tCount">0</b><small id="tSpan">–</small></div>
+    <div class="tile"><span>안내 전화</span><b id="tCall">0</b><small id="tCallSub">자동 안내 기준</small></div>
+    <div class="tile"><span>아침 평균 시각</span><b id="tAm">–</b><small id="tAmSub">최근 14일</small></div>
+    <div class="tile"><span>저녁 평균 시각</span><b id="tPm">–</b><small id="tPmSub">최근 14일</small></div>
+    <div class="tile warn"><span>빠진 복용</span><b id="tMiss">0</b><small id="tMissSub">첫 기록 이후</small></div>
+  </section>
+
+  <section class="card" aria-labelledby="chH">
+    <div class="card-head"><h2 id="chH">복용 시각 분포</h2><small>최근 14일 · 점 하나가 버튼 한 번</small></div>
+    <div class="chart-wrap"><svg class="chart" id="chart" viewBox="0 0 640 300" role="img" aria-label="최근 14일 날짜별 복용 시각 점 그래프"></svg></div>
+    <div class="legend">
+      <span><i class="k-am"></i>아침 약</span><span><i class="k-pm"></i>저녁 약</span>
+      <span><i class="k-usual"></i>평소 시각</span><span><i class="k-late"></i>평소 + 2시간 이후 (안내 전화 구간)</span>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="rawH">
+    <div class="card-head">
+      <h2 id="rawH">원자료</h2>
+      <div class="filters">
+        <div class="seg" role="group" aria-label="기간" id="fPeriod">
+          <button type="button" data-v="7" aria-pressed="false">7일</button>
+          <button type="button" data-v="30" aria-pressed="true">30일</button>
+          <button type="button" data-v="0" aria-pressed="false">전체</button>
+        </div>
+        <div class="seg" role="group" aria-label="구분" id="fSlot">
+          <button type="button" data-v="all" aria-pressed="true">전체</button>
+          <button type="button" data-v="am" aria-pressed="false">아침</button>
+          <button type="button" data-v="pm" aria-pressed="false">저녁</button>
+        </div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="raw" id="raw">
+        <thead><tr><th>번호</th><th>날짜</th><th>구분</th><th>기록 시각</th><th>평소 대비</th><th>상태</th><th>타임스탬프 (ms)</th></tr></thead>
+        <tbody id="rawBody"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="empty" hidden>아직 기록이 없어요. 복약 버튼 화면에서 "약 먹었어요"를 누르거나, 아래 시연용 예시 데이터를 넣어 보세요.</p>
+    <p class="fine">평소 시각 = 최근 7번 기록의 가운데 값(3번 미만이면 아침 8:30 · 저녁 6:30). 평소보다 2시간 넘게 늦으면 안내 전화 대상입니다.</p>
+  </section>
+
+  <section class="card" aria-labelledby="missH">
+    <div class="card-head"><h2 id="missH">빠진 복용</h2><small>기록이 없는 때</small></div>
+    <ul class="list" id="missList"></ul>
+  </section>
+
+  <section class="card" aria-labelledby="callH">
+    <div class="card-head"><h2 id="callH">안내 전화 기록</h2><small>화면 시연 포함</small></div>
+    <ul class="list" id="callList"></ul>
+  </section>
+
+  <section class="card" aria-labelledby="expH">
+    <h2 id="expH">내보내기</h2>
+    <div class="row">
+      <button type="button" class="btn primary" id="csv">CSV 내려받기 (엑셀)</button>
+      <button type="button" class="btn" id="json">JSON 복사</button>
+    </div>
+    <p class="fine" id="expNote">CSV는 엑셀에서 바로 열립니다. 예시 데이터도 함께 들어가며 '예시' 열로 구분돼요.</p>
+  </section>
+
+  <section class="card demo" aria-labelledby="demoH">
+    <h2 id="demoH">발표 시연용 예시 데이터</h2>
+    <p class="fine">기록이 적을 때 14일치 예시 기록(빠진 날 1번, 늦은 날 1번 포함)을 넣어 화면을 보여 줄 수 있어요. 예시 기록은 표에 '예시'로 표시되고 버튼 화면의 7일 기록에도 나타납니다.</p>
+    <div class="row">
+      <button type="button" class="btn" id="seed">예시 데이터 넣기</button>
+      <button type="button" class="btn" id="unseed">예시 데이터 지우기</button>
+    </div>
+    <div class="confirm" id="seedConfirm" hidden>
+      <p id="seedMsg"></p>
+      <div class="row"><button type="button" class="btn primary" id="seedYes">넣기</button><button type="button" class="btn" id="seedNo">취소</button></div>
+    </div>
+  </section>
+
+  <footer>간호학과 PBL 시제품 · 가상 사례(김동남 님)</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const DAYS = "일월화수목금토";
+const SLOT = { am: "아침", pm: "저녁" };
+const DEFAULTS = { am: 8*60+30, pm: 18*60+30 };
+const GRACE = 120;
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+const hms = d => pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+function kor(h, m, s){ const ap = h < 12 ? "오전" : "오후"; const h12 = h % 12 === 0 ? 12 : h % 12; return ap + " " + h12 + ":" + pad(m) + (s === undefined ? "" : ":" + pad(s)); }
+const korMin = x => kor(Math.floor(x/60) % 24, Math.round(x) % 60);
+const minOf = t => { const p = t.split(":").map(Number); return p[0]*60 + p[1] + (p[2] || 0)/60; };
+const dateLabel = ds => { const d = new Date(ds + "T00:00:00"); return (d.getMonth()+1) + "/" + d.getDate() + " (" + DAYS[d.getDay()] + ")"; };
+
+function read(k, d){ try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+function write(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+const valid = r => r && typeof r.ms === "number" && (r.slot === "am" || r.slot === "pm") && /^\d{4}-\d\d-\d\d$/.test(r.date || "") && /^\d\d:\d\d:\d\d$/.test(r.time || "");
+const doses = () => read("kdn-doses", []).filter(valid).map(r => ({ id: r.id, ms: r.ms, date: r.date, time: r.time, slot: r.slot, sample: !!r.sample }));
+const calls = () => read("kdn-calls", []).filter(c => c && typeof c.ms === "number");
+
+function usual(recs, slot){
+  const first = new Map();
+  for (const r of recs) if (r.slot === slot) { const p = first.get(r.date); if (!p || r.ms < p.ms) first.set(r.date, r); }
+  const mins = [...first.values()].sort((a, b) => b.ms - a.ms).slice(0, 7).map(r => Math.floor(minOf(r.time))).sort((a, b) => a - b);
+  if (mins.length < 3) return DEFAULTS[slot];
+  const k = Math.floor(mins.length / 2);
+  return mins.length % 2 ? mins[k] : Math.round((mins[k-1] + mins[k]) / 2);
+}
+function firstMap(recs){ const m = new Map(); for (const r of [...recs].sort((a, b) => a.ms - b.ms)) { const k = r.date + "|" + r.slot; if (!m.has(k)) m.set(k, r); } return m; }
+
+let fPeriod = 30, fSlot = "all";
+
+function render(){
+  const recs = doses().sort((a, b) => a.ms - b.ms);
+  const cl = calls();
+  const now = new Date(), today = ymd(now), nowMin = now.getHours()*60 + now.getMinutes();
+  const U = { am: usual(recs, "am"), pm: usual(recs, "pm") };
+  const first = firstMap(recs);
+
+  /* 날짜 범위: 첫 기록 ~ 오늘 */
+  const days = [];
+  if (recs.length) { const d = new Date(recs[0].date + "T00:00:00"); while (ymd(d) <= today) { days.push(ymd(d)); d.setDate(d.getDate() + 1); } }
+  let due = 0, took = 0, due7 = 0, took7 = 0; const missed = [];
+  const d7 = new Date(now); d7.setDate(now.getDate() - 6); const from7 = ymd(d7);
+  for (const ds of days) for (const s of ["am", "pm"]) {
+    const has = first.has(ds + "|" + s);
+    const counted = ds < today || has || nowMin >= U[s] + GRACE;
+    if (!counted) continue;
+    due++; if (has) took++; else missed.push({ date: ds, slot: s });
+    if (ds >= from7) { due7++; if (has) took7++; }
+  }
+  $("tRate").textContent = due ? Math.round(took / due * 100) + "%" : "–";
+  $("tRateSub").textContent = due ? "전체 " + took + "/" + due + " · 최근 7일 " + took7 + "/" + due7 : "기록이 쌓이면 계산돼요";
+  $("tCount").textContent = recs.length;
+  $("tSpan").textContent = recs.length ? dateLabel(recs[0].date) + " ~ " + dateLabel(recs[recs.length-1].date) : "–";
+  $("tMiss").textContent = missed.length;
+  $("tMissSub").textContent = recs.length ? "첫 기록 이후 " + days.length + "일" : "첫 기록 이후";
+  const auto = cl.filter(c => c.mode === "auto");
+  $("tCall").textContent = auto.length;
+  $("tCallSub").textContent = "자동 " + auto.length + "번 · 시연 " + (cl.length - auto.length) + "번";
+
+  /* 평균 시각 (최근 14일, 하루 첫 기록) */
+  const d14 = new Date(now); d14.setDate(now.getDate() - 13); const from14 = ymd(d14);
+  for (const s of ["am", "pm"]) {
+    const ms = [...first.values()].filter(r => r.slot === s && r.date >= from14).map(r => minOf(r.time));
+    const id = s === "am" ? "tAm" : "tPm";
+    if (!ms.length) { $(id).textContent = "–"; $(id + "Sub").textContent = "최근 14일 기록 없음"; continue; }
+    const avg = ms.reduce((a, b) => a + b, 0) / ms.length;
+    $(id).textContent = korMin(avg);
+    $(id + "Sub").textContent = "범위 " + korMin(Math.min(...ms)) + " ~ " + korMin(Math.max(...ms));
+  }
+
+  /* 원자료 표 */
+  const seen = new Map();
+  const rows = recs.map((r, i) => {
+    const k = r.date + "|" + r.slot; const n = (seen.get(k) || 0) + 1; seen.set(k, n);
+    const diff = Math.round(minOf(r.time) - U[r.slot]);
+    return Object.assign({ no: i + 1, diff, late: n === 1 && diff > GRACE, dup: n > 1 }, r);
+  });
+  let cut = null; if (fPeriod) { const c = new Date(now); c.setDate(now.getDate() - (fPeriod - 1)); cut = ymd(c); }
+  const shown = rows.filter(r => (!cut || r.date >= cut) && (fSlot === "all" || r.slot === fSlot)).reverse();
+  const tb = $("rawBody"); tb.textContent = "";
+  for (const r of shown) {
+    const tr = tb.insertRow();
+    const cell = (txt, cls) => { const td = tr.insertCell(); if (cls) td.className = cls; td.textContent = txt; return td; };
+    cell(r.no, "num"); cell(dateLabel(r.date));
+    const sc = cell(SLOT[r.slot] + " 약"); sc.className = "slot-" + r.slot;
+    cell(r.time, "t");
+    cell((r.diff > 0 ? "+" : r.diff < 0 ? "−" : "±") + Math.abs(r.diff) + "분");
+    const st = tr.insertCell();
+    const chip = (t, c) => { const s = document.createElement("span"); s.className = "chip " + c; s.textContent = t; st.appendChild(s); };
+    if (r.dup) chip("중복 기록", "dup"); else if (r.late) chip("2시간+ 늦음", "late"); else chip("정상", "ok");
+    if (r.sample) chip("예시", "sample");
+    cell(String(r.ms), "code");
+  }
+  $("empty").hidden = recs.length > 0;
+  $("raw").parentElement.hidden = recs.length === 0;
+
+  /* 빠진 복용 */
+  const ml = $("missList"); ml.textContent = "";
+  const addLi = (ul, a, b) => { const li = document.createElement("li"); const x = document.createElement("span"), y = document.createElement("span"); x.textContent = a; y.textContent = b; li.append(x, y); ul.appendChild(li); };
+  if (!missed.length) addLi(ml, recs.length ? "빠진 복용이 없어요" : "기록이 쌓이면 여기에 보여요", "");
+  for (const m of missed.slice().reverse().slice(0, 30)) addLi(ml, dateLabel(m.date) + " " + SLOT[m.slot] + " 약", "기록 없음");
+
+  /* 안내 전화 */
+  const cu = $("callList"); cu.textContent = "";
+  const RES = { answered: "받음 · 안내 음성 끝까지", declined: "거절", missed: "받지 않음" };
+  if (!cl.length) addLi(cu, "아직 안내 전화가 없어요", "");
+  for (const c of cl.slice().sort((a, b) => b.ms - a.ms).slice(0, 30))
+    addLi(cu, dateLabel(c.date) + " " + c.time + " · " + (SLOT[c.slot] || "") + " 약", (c.mode === "auto" ? "자동" : "시연") + " · " + (RES[c.result] || c.result || ""));
+
+  drawChart(recs, U, now, first);
+}
+
+/* ── 시각 분포 그래프 */
+function drawChart(recs, U, now, first){
+  const svg = $("chart"), NS = "http://www.w3.org/2000/svg";
+  svg.textContent = "";
+  const W = 640, H = 300, L = 44, R = 12, T = 12, B = 34;
+  const y0 = 5*60, y1 = 24*60;
+  const y = m => T + (Math.min(Math.max(m, y0), y1) - y0) / (y1 - y0) * (H - T - B);
+  const N = 14, colW = (W - L - R) / N;
+  const x = i => L + colW * (i + 0.5);
+  const el = (tag, attrs, cls) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (cls) e.setAttribute("class", cls); svg.appendChild(e); return e; };
+  /* 늦음 구간 */
+  el("rect", { x: L, y: y(U.am + GRACE), width: W - L - R, height: Math.max(0, y(14*60) - y(U.am + GRACE)) }, "latezone");
+  el("rect", { x: L, y: y(U.pm + GRACE), width: W - L - R, height: Math.max(0, y(y1) - y(U.pm + GRACE)) }, "latezone");
+  /* 가로 눈금 */
+  for (let h = 6; h <= 24; h += 3) {
+    el("line", { x1: L, x2: W - R, y1: y(h*60), y2: y(h*60) }, "gridl");
+    const t = el("text", { x: L - 8, y: y(h*60) + 4, "text-anchor": "end" }, "ylab"); t.textContent = h + "시";
+  }
+  /* 평소 시각 */
+  for (const s of ["am", "pm"]) el("line", { x1: L, x2: W - R, y1: y(U[s]), y2: y(U[s]) }, "usual " + s);
+  /* 날짜 축 + 점 */
+  const today = ymd(now);
+  for (let i = 0; i < N; i++) {
+    const d = new Date(now); d.setDate(now.getDate() - (N - 1 - i)); const ds = ymd(d);
+    const t = el("text", { x: x(i), y: H - 16, "text-anchor": "middle" }, "xlab" + (ds === today ? " today" : "")); t.textContent = d.getDate();
+    const w = el("text", { x: x(i), y: H - 3, "text-anchor": "middle" }, "xlab" + (ds === today ? " today" : "")); w.textContent = DAYS[d.getDay()];
+    const dayRecs = recs.filter(r => r.date === ds);
+    dayRecs.forEach((r, j) => {
+      const m = minOf(r.time), isFirst = first.get(r.date + "|" + r.slot) === r;
+      const late = isFirst && m - U[r.slot] > GRACE;
+      const c = el("circle", { cx: x(i) + (j % 2 ? 5 : 0) * (dayRecs.length > 2 ? 1 : 0), cy: y(m), r: 6 }, "dot " + r.slot + (late ? " late" : "") + (r.sample ? " sample" : ""));
+      const tt = document.createElementNS(NS, "title"); tt.textContent = dateLabel(r.date) + " " + SLOT[r.slot] + " " + r.time; c.appendChild(tt);
+    });
+  }
+}
+
+/* ── 필터 */
+function bindSeg(id, set){
+  const g = $(id);
+  g.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    for (const x of g.querySelectorAll("button")) x.setAttribute("aria-pressed", String(x === b));
+    set(b.dataset.v); render();
+  });
+}
+bindSeg("fPeriod", v => { fPeriod = Number(v); });
+bindSeg("fSlot", v => { fSlot = v; });
+
+/* ── 내보내기 */
+function csvText(){
+  const recs = doses().sort((a, b) => a.ms - b.ms);
+  const U = { am: usual(recs, "am"), pm: usual(recs, "pm") };
+  const seen = new Map();
+  const lines = [["번호","날짜","요일","구분","기록시각","평소대비(분)","상태","타임스탬프(ms)","ISO시각","예시"].join(",")];
+  recs.forEach((r, i) => {
+    const k = r.date + "|" + r.slot; const n = (seen.get(k) || 0) + 1; seen.set(k, n);
+    const diff = Math.round(minOf(r.time) - U[r.slot]);
+    const st = n > 1 ? "중복" : diff > GRACE ? "2시간이상늦음" : "정상";
+    const d = new Date(r.ms);
+    lines.push([i + 1, r.date, DAYS[new Date(r.date + "T00:00:00").getDay()], SLOT[r.slot], r.time, diff, st, r.ms, d.toISOString(), r.sample ? "예시" : ""].join(","));
+  });
+  return "\ufeff" + lines.join("\r\n");
+}
+$("csv").addEventListener("click", () => {
+  try {
+    const blob = new Blob([csvText()], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = "복약기록_김동남_" + ymd(new Date()) + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    $("expNote").textContent = "CSV 파일을 내려받았어요.";
+  } catch (e) { $("expNote").textContent = "이 브라우저에서는 내려받기가 막혀 있어요. JSON 복사를 써 주세요."; }
+});
+$("json").addEventListener("click", () => {
+  const txt = JSON.stringify({ patient: "김동남(가상)", exportedAt: new Date().toISOString(), doses: doses(), calls: calls() }, null, 2);
+  const done = ok => { $("expNote").textContent = ok ? "JSON을 복사했어요. 메신저나 메모에 붙여 넣으세요." : "복사하지 못했어요. 브라우저 설정에서 클립보드를 허용해 주세요."; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => done(true), () => done(false));
+  else done(false);
+});
+
+/* ── 시연용 예시 데이터 */
+function makeSample(){
+  const now = new Date(), out = [], cl = [];
+  const amOff = [12, 4, 21, 8, 15, 2, 9, 25, 6, 152, 11, 18, 3, 7];   /* 아침 8:00 + 분 (10번째 = 늦음) */
+  const pmOff = [31, 18, 44, 22, null, 27, 35, 15, 40, 20, 29, 12, 38, 24]; /* 저녁 18:00 + 분 (5번째 = 빠짐) */
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now); d.setDate(now.getDate() - i);
+    const idx = 13 - i;
+    for (const [slot, base, off] of [["am", 8*60, amOff[idx]], ["pm", 18*60, pmOff[idx]]]) {
+      if (off == null) continue;
+      const t = new Date(d); t.setHours(0, 0, 0, 0); t.setMinutes(base + off); t.setSeconds((idx * 17 + (slot === "am" ? 5 : 41)) % 60);
+      if (t > now) continue;
+      out.push({ id: "s" + t.getTime(), ms: t.getTime(), date: ymd(t), time: hms(t), slot, sample: true });
+      if (slot === "am" && off > 120) {
+        const c = new Date(t); c.setHours(10, 31, 12);
+        cl.push({ ms: c.getTime(), date: ymd(c), time: hms(c), slot: "am", mode: "auto", result: "answered", sample: true });
+      }
+    }
+  }
+  return { out, cl };
+}
+let seedMode = null;
+$("seed").addEventListener("click", () => {
+  seedMode = "add";
+  const has = doses().some(r => r.sample);
+  $("seedMsg").textContent = has ? "예시 데이터가 이미 있어요. 지우고 새로 넣을까요?" : "14일치 예시 기록을 넣을까요? 실제 기록은 그대로 남아요.";
+  $("seedYes").textContent = "넣기"; $("seedConfirm").hidden = false;
+});
+$("unseed").addEventListener("click", () => {
+  seedMode = "remove";
+  $("seedMsg").textContent = "예시 기록만 지울까요? 버튼으로 남긴 실제 기록은 그대로 남아요.";
+  $("seedYes").textContent = "예시만 지우기"; $("seedConfirm").hidden = false;
+});
+$("seedNo").addEventListener("click", () => { $("seedConfirm").hidden = true; });
+$("seedYes").addEventListener("click", () => {
+  const real = read("kdn-doses", []).filter(r => !(r && r.sample));
+  const realCalls = read("kdn-calls", []).filter(c => !(c && c.sample));
+  if (seedMode === "add") { const s = makeSample(); write("kdn-doses", real.concat(s.out)); write("kdn-calls", realCalls.concat(s.cl)); }
+  else { write("kdn-doses", real); write("kdn-calls", realCalls); }
+  $("seedConfirm").hidden = true; render();
+});
+
+/* 다른 탭에서 버튼을 누르면 바로 반영 */
+window.addEventListener("storage", e => { if (e.key === "kdn-doses" || e.key === "kdn-calls") render(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+try { localStorage.getItem("x"); } catch (e) { $("where").textContent = "이 브라우저는 저장 공간을 막아 두어 기록을 읽을 수 없어요. 개인정보 보호(시크릿) 모드를 끄고 다시 열어 주세요."; }
+render();
+})();
+</script>
+</body>
+</html>
