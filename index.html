@@ -117,6 +117,8 @@ summary{cursor:pointer;font-weight:700;font-size:.95rem;min-height:40px;display:
 ol.log{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:260px;overflow:auto}
 ol.log li{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;padding:6px 2px;border-bottom:1px dashed var(--line)}
 ol.log li span:last-child{color:var(--muted)}
+.more{display:flex;justify-content:space-between;align-items:center;min-height:48px;padding:0 16px;border-radius:12px;background:var(--brand-soft);color:var(--ink);font-weight:700;text-decoration:none}
+.more:hover{outline:2px solid var(--brand-ring)}
 
 /* 안내 전화 */
 .script{margin:0;padding:14px 16px;background:var(--sunk);border-radius:12px;font-size:.98rem;line-height:1.6}
@@ -194,7 +196,7 @@ footer{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.6}
 
 <div class="wrap">
   <div class="top">
-    <span>○○대학교병원 · 신경과 · 심장내과</span>
+    <span>동남보건대학교병원 · 신경과 · 심장내과</span>
     <span><b>김동남</b> 님</span>
   </div>
 
@@ -229,6 +231,7 @@ footer{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.6}
       <summary>기록 전체 보기 (초 단위)</summary>
       <ol class="log" id="log"></ol>
     </details>
+    <a class="more" href="log.html">기록 데이터 전체 보기 <span aria-hidden="true">→</span></a>
   </section>
 
   <section class="card" aria-labelledby="callH">
@@ -291,7 +294,7 @@ footer{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.6}
     <div class="call-top">
       <p class="call-kind" id="callKind">자동 안내 전화</p>
       <div class="call-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></div>
-      <h2 id="callWho">○○대학교병원 복약 안내</h2>
+      <h2 id="callWho">동남보건대학교병원 복약 안내</h2>
       <p class="call-num num">1234-0000</p>
       <p class="call-status num" id="callStatus" aria-live="polite">전화가 왔어요</p>
     </div>
@@ -523,8 +526,15 @@ function burst(){
 function startRing(){ burst(); ringTimer = setInterval(burst, 3000); try { navigator.vibrate && navigator.vibrate([700, 300, 700]); } catch (e) {} }
 function stopRing(){ clearInterval(ringTimer); ringTimer = null; try { navigator.vibrate && navigator.vibrate(0); } catch (e) {} }
 function logCall(result){
-  if (!callCtx || !callCtx.auto || !db || store !== "db") return;
-  const c = callCtx, ref = db.collection("calls").doc(c.key);
+  if (!callCtx) return;
+  const c = callCtx;
+  if (result !== "ringing") {
+    const list = readLocal("kdn-calls", []);
+    list.push({ ms: c.ms, date: c.date, time: c.time, slot: c.slot || slotFor(new Date(c.ms)), mode: c.auto ? "auto" : "demo", result });
+    writeLocal("kdn-calls", list.slice(-200));
+  }
+  if (!c.auto || !db || store !== "db") return;
+  const ref = db.collection("calls").doc(c.key);
   c.q = (c.q || Promise.resolve()).then(() => ref.set({ ms: c.ms, date: c.date, time: c.time, slot: c.slot, result })).catch(() => {});
 }
 function openCall(opts){
